@@ -1,36 +1,71 @@
-# da-POS-
-咖啡店 POS 系統專案
-# 咖啡店 POS 系統專案摘要
+# 咖啡店 POS 系統
+
+基於 React + MariaDB + Node.js 的咖啡店 POS (銷售點) 系統。
 
 ## 專案概述
-- 基於 React + MariaDB + Node.js 的咖啡店 POS 系統
-- 支援跨平台使用（包括 iPad 和 Windows 觸控螢幕）
-- 部署在群暉 NAS 723+ 上
 
-## 已完成組件
-1. **前端界面 (React)**
-   - 商品列表展示（美式咖啡、拿鐵、氣泡水、貝果、可頌）
-   - 購物車功能與訂單管理
-   - 響應式設計，適合觸控螢幕
+這是一個網頁版的 POS 系統，專為咖啡店設計，支援跨平台使用（iPad 和 Windows 觸控螢幕）。系統部署在群暉 NAS 723+ 上，使用 Docker 容器管理。
 
-2. **資料庫結構 (MariaDB)**
-   - 產品表、類別表
-   - 訂單表、訂單細項表
-   - 使用者表、庫存表
+### 主要功能
 
-3. **後端 API (Node.js)**
-   - 產品管理 API
-   - 訂單處理 API
-   - 使用者認證 API
+- **前端介面**：直覺的觸控友好界面，方便點餐和結帳
+- **產品管理**：輕鬆管理咖啡、飲料和食品項目
+- **訂單處理**：即時訂單創建和管理
+- **報表生成**：銷售數據分析和報表
 
-## 待完成項目
-1. 庫存管理功能
-2. 會員系統整合
-3. 銷售報表與數據分析
-4. 離線模式支援
+## 技術架構
 
-## 專案檔案位置
-- 前端代碼：pos-frontend.jsx
-- 後端代碼：backend-code.js
-- 資料庫結構：database-schema.sql
-- 安裝指南：installation-guide.md
+- **前端**：React.js
+- **後端**：Node.js + Express
+- **資料庫**：MariaDB
+- **部署**：Docker on Synology NAS
+
+## 目錄結構
+
+```
+/coffee-pos/
+  /frontend/         # React 前端
+    /src/
+      /components/   # React 組件
+      App.js         # 主應用程式
+      index.js       # 入口文件
+  /backend/          # Node.js 後端
+    server.js        # Express 服務器
+    .env             # 環境變數
+  /database/         # 資料庫相關
+    schema.sql       # 資料庫結構
+```
+
+## 安裝與設定
+
+詳細的安裝和設定步驟請參閱 [installation-guide.md](installation-guide.md)。
+
+## 開發指南
+
+### 前端開發
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+### 後端開發
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+### 資料庫設定
+
+執行 `database/schema.sql` 建立初始資料庫結構。
+
+## 貢獻
+
+歡迎提交問題報告和改進建議。
+
+## 授權
+
+本專案採用 MIT 授權條款。
