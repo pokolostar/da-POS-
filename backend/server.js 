@@ -1,0 +1,118 @@
+const express = require('express');
+const cors = require('cors');
+const mysql = require('mysql2/promise');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// 中間件
+app.use(cors());
+app.use(express.json());
+
+// 資料庫連接池
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
+// 測試路由
+app.get('/', (req, res) => {
+  res.json({ message: '咖啡店 POS 系統 API 伺服器運行中' });
+});
+
+// 獲取所有商品
+app.get('/api/products', async (req, res) => {
+  try {
+    const [products] = await pool.query('SELECT * FROM products');
+    res.json(products);
+  } catch (error) {
+    console.error('獲取商品錯誤:', error);
+    res.status(500).json({ message: '獲取商品失敗', error: error.message });
+  }
+});
+
+// 創建訂單
+app.post('/api/orders', async (req, res) => {
+  const { items, total } = req.body;
+  
+  try {
+    // 開始事務
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+    
+    try {
+      // 插入訂單
+      const [orderResult] = await connection.query(
+        'INSERT INTO orders (total, status) VALUES (?, ?)',
+        [total, '已完成']
+      );
+      
+      const orderId = orderResult.insertId;
+      
+      // 插入訂單項目
+      for (const item of items) {
+        await connection.query(
+          'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
+          [orderId, item.id, item.quantity, item.price]
+        );
+      }
+      
+      // 提交事務
+      await connection.commit();
+      
+      res.status(201).json({ 
+        message: '訂單創建成功',
+        orderId: orderId
+      });
+    } catch (error) {
+      // 出錯時回滾事務
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    console.error('創建訂單錯誤:', error);
+    res.status(500).json({ message: '創建訂單失敗', error: error.message });
+  }
+});
+
+// 獲取訂單歷史
+app.get('/api/orders', async (req, res) => {
+  try {
+    const [orders] = await pool.query(`
+      SELECT o.*, 
+             (SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                  'id', oi.id,
+                  'productId', oi.product_id,
+                  'quantity', oi.quantity,
+                  'price', oi.price,
+                  'name', p.name
+                )
+              )
+              FROM order_items oi
+              JOIN products p ON oi.product_id = p.id
+              WHERE oi.order_id = o.id
+             ) as items
+      FROM orders o
+      ORDER BY o.timestamp DESC
+    `);
+    
+    res.json(orders);
+  } catch (error) {
+    console.error('獲取訂單錯誤:', error);
+    res.status(500).json({ message: '獲取訂單失敗', error: error.message });
+  }
+});
+
+// 啟動服務器
+app.listen(PORT, () => {
+  console.log(`服務器運行在 http://localhost:${PORT}`);
+});
